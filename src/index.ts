@@ -1,1 +1,1 @@
-export { default as RoleTable } from './RolesSelect';
+export { default as RolesSelect } from './RolesSelect';

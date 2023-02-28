@@ -1,9 +1,11 @@
-# RoleTable
+# 组件
+
+## RolesSelect
 
 This is an example component.
 
 ```jsx
-import { RoleTable } from 'rsc-component';
+import { RolesSelect } from 'rsc-component';
 
 const PERMISSION_LIST = [
   {
@@ -241,10 +243,13 @@ const PERMISSION_LIST = [
     uiPermissions: [],
   },
 ];
-export default () => <RoleTable data={PERMISSION_LIST} />;
+export default () => <RolesSelect data={PERMISSION_LIST} />;
 ```
+
 ## api
-目前配置项支持传入data，data的数据类型 "PermissionListType"
+
+目前配置项支持传入 data，data 的数据类型 "PermissionListType"
+
 ```
 interface UiPermissionItem {
   key: string;
