@@ -1,6 +1,6 @@
 {
   "name": "rsc-component",
-  "version": "0.0.6",
+  "version": "0.0.8",
   "description": "Some common components",
   "license": "MIT",
   "main": "lib/index.js",

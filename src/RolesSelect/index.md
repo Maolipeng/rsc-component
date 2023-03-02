@@ -243,10 +243,19 @@ const PERMISSION_LIST = [
     uiPermissions: [],
   },
 ];
-export default () => <RolesSelect data={PERMISSION_LIST} />;
+export default () => <RolesSelect isCascadeMenu data={PERMISSION_LIST} />;
 ```
 
 ## api
+
+| 字段名称        | 类型                         | 是否必填 | 说明                                     |
+| --------------- | ---------------------------- | -------- | ---------------------------------------- |
+| `data`          | `PermissionListType`         | 是       | 结构化生成 ui 的数据                     |
+| `value`         | `valueType`                  | 否       | 控制选择的内容                           |
+| `onChange`      | `(value: valueType) => void` | 否       | 更改 value                               |
+| `isSelectAll`   | `boolean`                    | 否       | 初始状态下是否全选, 默认值为 true        |
+| `className`     | `string`                     | 否       | classname                                |
+| `isCascadeMenu` | `boolean`                    | 否       | 按钮权限是否联动菜单取消，默认值为 false |
 
 目前配置项支持传入 data，data 的数据类型 "PermissionListType"
 
@@ -261,6 +270,7 @@ interface PermissionItem {
   uiPermissions: UiPermissionItem[];
   children?: PermissionItem[];
 }
-type PermissionListType = PermissionItem[];
 
+type PermissionListType = PermissionItem[];
+type valueType = { menu: string[]; checkedPermissions: string[] }
 ```
