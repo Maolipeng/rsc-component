@@ -20,31 +20,31 @@ interface IProps {
 interface RecordType extends PermissionItem {
   parent: string | null;
 }
-type level1Arr = string[];
+// type level1Arr = string[];
 type UiMenusType = {
   menus: string[];
   uiCollection: string[];
 };
 
-const judgeSelectedEmpty = (
-  record: RecordType,
-  uiList: level1Arr,
-  treeList: level1Arr,
-) => {
-  const children = record.children;
-  const tempMap = record.uiPermissions.map((item) => item.key);
-  const isCheckedUiPermissionsEmpty = !tempMap.some((k: string) =>
-    uiList.includes(k),
-  );
-  if (children) {
-    const childrenMenus = children.map((c) => c.key);
-    const isChildrenMenusEmpty = !childrenMenus.some((t) =>
-      treeList.includes(t),
-    );
-    return isCheckedUiPermissionsEmpty && isChildrenMenusEmpty;
-  }
-  return isCheckedUiPermissionsEmpty;
-};
+// const judgeSelectedEmpty = (
+//   record: RecordType,
+//   uiList: level1Arr,
+//   treeList: level1Arr,
+// ) => {
+//   const children = record.children;
+//   const tempMap = record.uiPermissions.map((item) => item.key);
+//   const isCheckedUiPermissionsEmpty = !tempMap.some((k: string) =>
+//     uiList.includes(k),
+//   );
+//   if (children) {
+//     const childrenMenus = children.map((c) => c.key);
+//     const isChildrenMenusEmpty = !childrenMenus.some((t) =>
+//       treeList.includes(t),
+//     );
+//     return isCheckedUiPermissionsEmpty && isChildrenMenusEmpty;
+//   }
+//   return isCheckedUiPermissionsEmpty;
+// };
 const deepCollectMenuUiPermissions = (list: PermissionListType) => {
   return list.reduce(
     (res: UiMenusType, item) => {
@@ -92,7 +92,7 @@ const findMenusRelativeList = (
     uiPermissions,
   };
 };
-const RscComponent: React.FC<IProps> = (props) => {
+const RolesSelect: React.FC<IProps> = (props) => {
   const {
     data: sourceData,
     value = { menu: [], checkedPermissions: [] },
@@ -135,19 +135,19 @@ const RscComponent: React.FC<IProps> = (props) => {
     } else {
       // 取消选中
       old.splice(old.indexOf(key), 1);
-      if (judgeSelectedEmpty(record, old, treeCheckedTemp)) {
-        treeCheckedTemp.splice(treeCheckedTemp.indexOf(currentKey), 1);
-        const cancelAncestorCheckedMenus = ancestorMenus.filter((item) => {
-          const detail = permissionsMapFlat[item];
-          const children = detail.children.map((c: any) => c.key) || [];
-          const needJudgeMenus = difference(children, [currentKey]);
-          return !needJudgeMenus.some((n) => treeChecked.includes(n));
-        });
-        treeCheckedTemp = difference(
-          treeCheckedTemp,
-          cancelAncestorCheckedMenus,
-        );
-      }
+      // if (judgeSelectedEmpty(record, old, treeCheckedTemp)) {
+      //   treeCheckedTemp.splice(treeCheckedTemp.indexOf(currentKey), 1);
+      //   const cancelAncestorCheckedMenus = ancestorMenus.filter((item) => {
+      //     const detail = permissionsMapFlat[item];
+      //     const children = detail.children.map((c: any) => c.key) || [];
+      //     const needJudgeMenus = difference(children, [currentKey]);
+      //     return !needJudgeMenus.some((n) => treeChecked.includes(n));
+      //   });
+      //   treeCheckedTemp = difference(
+      //     treeCheckedTemp,
+      //     cancelAncestorCheckedMenus,
+      //   );
+      // }
     }
 
     setBtnDtoChecked(old);
@@ -278,4 +278,4 @@ const RscComponent: React.FC<IProps> = (props) => {
   );
 };
 
-export default RscComponent;
+export default RolesSelect;
