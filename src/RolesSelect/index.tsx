@@ -98,20 +98,25 @@ const findMenusRelativeList = (
 const RolesSelect: React.FC<IProps> = (props) => {
   const {
     data: sourceData,
-    value = { menu: [], checkedPermissions: [] },
+    value,
     onChange,
     className = '',
+    isSelectAll = false,
     isCascadeMenu = false,
   } = props;
-  const [treeChecked, setTreeChecked] = useState<string[]>(value.menu); // 受控，所有被选中的表格行
-  const [btnDtoChecked, setBtnDtoChecked] = useState<string[]>(
-    value.checkedPermissions,
-  ); // 受控，所有被选中的权限数据
-  const permissionsMapFlat = useMemo(() => flatMapFn(sourceData), [sourceData]);
   const ALL_AUTHORITIES = useMemo(
     () => deepCollectMenusCheckedPermissions(sourceData),
     [sourceData],
   );
+  const [treeChecked, setTreeChecked] = useState<string[]>(
+    value?.menu || (isSelectAll ? ALL_AUTHORITIES.menu : []),
+  ); // 受控，所有被选中的表格行
+  const [btnDtoChecked, setBtnDtoChecked] = useState<string[]>(
+    value?.checkedPermissions ||
+      (isSelectAll ? ALL_AUTHORITIES.checkedPermissions : []),
+  );
+  const permissionsMapFlat = useMemo(() => flatMapFn(sourceData), [sourceData]);
+
   // 被选中的权限 受控
   const dtoIsChecked = useCallback(
     (key: string): boolean => {
@@ -191,7 +196,6 @@ const RolesSelect: React.FC<IProps> = (props) => {
           btnDtoChecked,
           uiPermissions,
         );
-        console.log('treeChecked-cancll', treeChecked);
         const cancelAncestorCheckedMenus = ancestorMenus.filter((item) => {
           const detail = permissionsMapFlat[item];
           const children =
@@ -203,11 +207,7 @@ const RolesSelect: React.FC<IProps> = (props) => {
           ...laterGenerMenus,
           ...cancelAncestorCheckedMenus,
         ];
-        console.log('canceledMenus', canceledMenus);
-
         const realCheckedMenus = difference(treeChecked, canceledMenus);
-        console.log('realCheckedMenus', realCheckedMenus);
-
         setTimeout(() => {
           setBtnDtoChecked(realCheckedUiPermissionList);
           setTreeChecked(realCheckedMenus);
