@@ -9,7 +9,11 @@ import type {
   PermissionListType,
   UiPermissionItem,
 } from './typing';
-import { deepCollectMenusCheckedPermissions, flatMapFn } from './utils';
+import {
+  deepCollectMenusCheckedPermissions,
+  findDependsCascadeIds,
+  flatMapFn,
+} from './utils';
 
 export type valueType = { menu: string[]; checkedPermissions: string[] };
 interface IProps {
@@ -104,10 +108,12 @@ const RolesSelect: React.FC<IProps> = (props) => {
     isSelectAll = false,
     isCascadeMenu = false,
   } = props;
-  const ALL_AUTHORITIES = useMemo(
+  const { cascadeIdsMap, ...ALL_AUTHORITIES } = useMemo(
     () => deepCollectMenusCheckedPermissions(sourceData),
     [sourceData],
   );
+  console.log('cascade', cascadeIdsMap);
+
   const [treeChecked, setTreeChecked] = useState<string[]>(
     value?.menu || (isSelectAll ? ALL_AUTHORITIES.menu : []),
   ); // 受控，所有被选中的表格行
@@ -127,7 +133,7 @@ const RolesSelect: React.FC<IProps> = (props) => {
 
   // TABLE btn权限选中和取消选中，需要记录哪些被选中
   const onBtnDtoChange = (e: any, key: string, record: RecordType) => {
-    const old = [...btnDtoChecked];
+    let old = [...btnDtoChecked];
     let treeCheckedTemp = [...treeChecked];
     const currentKey = record.key;
     const currentMemuDetail = permissionsMapFlat[currentKey];
@@ -135,15 +141,18 @@ const RolesSelect: React.FC<IProps> = (props) => {
       currentMemuDetail,
       permissionsMapFlat,
     );
+    const cascadeIds = findDependsCascadeIds(key, cascadeIdsMap);
     if (e.target.checked) {
       // 选中
       old.push(key);
+      old = old.concat(cascadeIds);
       treeCheckedTemp = [
         ...new Set([...treeCheckedTemp, ...ancestorMenus, currentKey]),
       ];
     } else {
       // 取消选中
       old.splice(old.indexOf(key), 1);
+      old = difference(old, cascadeIds);
       if (isCascadeMenu && judgeSelectedEmpty(record, old, treeCheckedTemp)) {
         treeCheckedTemp.splice(treeCheckedTemp.indexOf(currentKey), 1);
         const cancelAncestorCheckedMenus = ancestorMenus.filter((item) => {

@@ -1,6 +1,7 @@
 export interface UiPermissionItem {
   key: string;
   title: string;
+  cascadeKeys: string[];
 }
 export interface PermissionItem {
   key: string;

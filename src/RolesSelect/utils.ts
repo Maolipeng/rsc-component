@@ -28,22 +28,49 @@ export const deepCollectMenusCheckedPermissions = (
   list: PermissionListType,
 ) => {
   return list.reduce(
-    (res: RolesPermission, item) => {
-      let { menu, checkedPermissions } = res;
+    (
+      res: RolesPermission & { cascadeIdsMap: Record<string, string[]> },
+      item,
+    ) => {
+      let { menu, checkedPermissions, cascadeIdsMap } = res;
       const { uiPermissions, key, children } = item;
       menu = [...menu, key];
-      checkedPermissions = [
-        ...checkedPermissions,
-        ...uiPermissions.map((u) => u.key),
-      ];
+      const uiPermissionKeys = uiPermissions.map((u) => {
+        const { key, cascadeKeys } = u;
+        if (cascadeKeys) {
+          cascadeIdsMap[key] = cascadeKeys;
+        }
+        return key;
+      });
+      checkedPermissions = [...checkedPermissions, ...uiPermissionKeys];
       if (children) {
-        const { menu: subMenus, checkedPermissions: subUiCollection } =
-          deepCollectMenusCheckedPermissions(children);
+        const {
+          menu: subMenus,
+          checkedPermissions: subUiCollection,
+          cascadeIdsMap: subCascadeIdsMap,
+        } = deepCollectMenusCheckedPermissions(children);
         menu = [...menu, ...subMenus];
         checkedPermissions = [...checkedPermissions, ...subUiCollection];
+        cascadeIdsMap = { ...cascadeIdsMap, ...subCascadeIdsMap };
       }
-      return { menu, checkedPermissions };
+      return { menu, checkedPermissions, cascadeIdsMap };
     },
-    { menu: [], checkedPermissions: [] },
+    { menu: [], checkedPermissions: [], cascadeIdsMap: {} },
   );
+};
+
+export const findDependsCascadeIds = (key, cascadeIdsMap) => {
+  const cascadeKeys = cascadeIdsMap[key];
+  if (cascadeKeys) {
+    const dependKeys = cascadeKeys.reduce(
+      (res, item) => [
+        ...res,
+        item,
+        ...findDependsCascadeIds(item, cascadeIdsMap),
+      ],
+      [],
+    );
+    return dependKeys;
+  }
+  return [];
 };

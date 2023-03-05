@@ -19,6 +19,7 @@ const PERMISSION_LIST = [
           {
             key: 'ownDataCreate',
             title: '添加数据',
+            cascadeKeys: ['authorizeDataAuth', 'projectEdit'],
           },
           {
             key: 'ownDataAuth',
@@ -37,6 +38,7 @@ const PERMISSION_LIST = [
           {
             key: 'authorizeDataAuth',
             title: '授权',
+            cascadeKeys: ['projectCreate'],
           },
         ],
       },
@@ -68,6 +70,7 @@ const PERMISSION_LIST = [
           {
             key: 'projectEdit',
             title: '项目设置',
+            cascadeKeys: ['datasetsCreate'],
           },
           {
             key: 'projectDel',
