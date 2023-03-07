@@ -3,20 +3,29 @@ import { PermissionItem, PermissionListType, RolesPermission } from './typing';
 export const flatMapFn = (
   list: PermissionListType,
   parent: string | null = null,
+  pathMap?: string,
 ) => {
   return list.reduce(
-    (res: Record<string, PermissionItem & { parent: string | null }>, item) => {
+    (
+      res: Record<
+        string,
+        PermissionItem & { parent: string | null; pathMap?: string }
+      >,
+      item,
+    ) => {
       const { key, title, uiPermissions, children } = item;
+      const transPathMap = parent === null ? key : `${pathMap}/${key}`;
       let data = { ...res };
       data[key] = {
         key,
         title,
         uiPermissions,
         parent,
+        pathMap: transPathMap,
         ...(children && { children }),
       };
       if (children) {
-        const childrenMenus = flatMapFn(children, key);
+        const childrenMenus = flatMapFn(children, key, transPathMap);
         data = { ...data, ...childrenMenus };
       }
       return data;
@@ -33,8 +42,8 @@ export const deepCollectMenusCheckedPermissions = (
       item,
     ) => {
       let { menu, checkedPermissions, cascadeIdsMap } = res;
-      const { uiPermissions, key, children } = item;
-      menu = [...menu, key];
+      const { uiPermissions, key: menuKey, children } = item;
+      menu = [...menu, menuKey];
       const uiPermissionKeys = uiPermissions.map((u) => {
         const { key, cascadeKeys } = u;
         if (cascadeKeys) {
@@ -59,17 +68,20 @@ export const deepCollectMenusCheckedPermissions = (
   );
 };
 
+export const splitStrFn = (str: string, by: string = '/'): string[] =>
+  str.split(by);
+
 export const findDependsCascadeIds = (key, cascadeIdsMap) => {
   const cascadeKeys = cascadeIdsMap[key];
   if (cascadeKeys) {
-    const dependKeys = cascadeKeys.reduce(
-      (res, item) => [
+    const dependKeys = cascadeKeys.reduce((res, item) => {
+      const splitArr = splitStrFn(item);
+      return [
         ...res,
         item,
-        ...findDependsCascadeIds(item, cascadeIdsMap),
-      ],
-      [],
-    );
+        ...findDependsCascadeIds(splitArr[splitArr.length - 1], cascadeIdsMap),
+      ];
+    }, []);
     return dependKeys;
   }
   return [];

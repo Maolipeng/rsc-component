@@ -1,6 +1,7 @@
 /** 权限Table树 **/
 
 import { Checkbox, Table } from 'antd';
+import { uniq } from 'lodash';
 import difference from 'lodash/difference';
 import React, { useCallback, useMemo, useState } from 'react';
 import type {
@@ -13,6 +14,7 @@ import {
   deepCollectMenusCheckedPermissions,
   findDependsCascadeIds,
   flatMapFn,
+  splitStrFn,
 } from './utils';
 
 export type valueType = { menu: string[]; checkedPermissions: string[] };
@@ -99,6 +101,7 @@ const findMenusRelativeList = (
     uiPermissions,
   };
 };
+
 const RolesSelect: React.FC<IProps> = (props) => {
   const {
     data: sourceData,
@@ -122,6 +125,7 @@ const RolesSelect: React.FC<IProps> = (props) => {
       (isSelectAll ? ALL_AUTHORITIES.checkedPermissions : []),
   );
   const permissionsMapFlat = useMemo(() => flatMapFn(sourceData), [sourceData]);
+  console.log('permissionsMapFlat', permissionsMapFlat);
 
   // 被选中的权限 受控
   const dtoIsChecked = useCallback(
@@ -141,18 +145,44 @@ const RolesSelect: React.FC<IProps> = (props) => {
       currentMemuDetail,
       permissionsMapFlat,
     );
-    const cascadeIds = findDependsCascadeIds(key, cascadeIdsMap);
+    // const cascadeIds = findDependsCascadeIds(key, cascadeIdsMap).map((item: string) => splitStrFn(item));
+    console.log('demoData', findDependsCascadeIds(key, cascadeIdsMap));
+
+    const cascadeIdsRes = findDependsCascadeIds(key, cascadeIdsMap).reduce(
+      (res: any, item: string) => {
+        const [menuKey, checkPermission] = splitStrFn(item);
+        res.cascadeIds = [...res.cascadeIds, checkPermission];
+        const pathMap = permissionsMapFlat[menuKey].pathMap;
+        res.menusRelative = uniq([
+          ...res.menusRelative,
+          ...splitStrFn(pathMap as string),
+        ]);
+        return res;
+      },
+      { cascadeIds: [], menusRelative: [] },
+    );
+    const { cascadeIds, menusRelative } = cascadeIdsRes;
+    console.log('cascadeIds', cascadeIdsRes);
+
     if (e.target.checked) {
       // 选中
       old.push(key);
       old = old.concat(cascadeIds);
-      treeCheckedTemp = [
-        ...new Set([...treeCheckedTemp, ...ancestorMenus, currentKey]),
-      ];
+      treeCheckedTemp = uniq([
+        ...treeCheckedTemp,
+        ...ancestorMenus,
+        currentKey,
+        ...menusRelative,
+      ]);
     } else {
       // 取消选中
       old.splice(old.indexOf(key), 1);
       old = difference(old, cascadeIds);
+      const relativeMenusEmpty = menusRelative.filter((m) =>
+        judgeSelectedEmpty(permissionsMapFlat[m], old, treeCheckedTemp),
+      );
+      console.log('relativeMenusEmpty', relativeMenusEmpty);
+      treeCheckedTemp = difference(treeCheckedTemp, relativeMenusEmpty);
       if (isCascadeMenu && judgeSelectedEmpty(record, old, treeCheckedTemp)) {
         treeCheckedTemp.splice(treeCheckedTemp.indexOf(currentKey), 1);
         const cancelAncestorCheckedMenus = ancestorMenus.filter((item) => {
