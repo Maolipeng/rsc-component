@@ -14,6 +14,7 @@ import {
   deepCollectMenusCheckedPermissions,
   findDependsCascadeIds,
   flatMapFn,
+  formatMatrix,
   splitStrFn,
 } from './utils';
 
@@ -40,6 +41,8 @@ const judgeSelectedEmpty = (
   uiList: level1Arr,
   treeList: level1Arr,
 ) => {
+  console.log(1111);
+
   const children = record.children;
   const tempMap = record.uiPermissions.map((item) => item.key);
   const isCheckedUiPermissionsEmpty = !tempMap.some((k: string) =>
@@ -145,44 +148,49 @@ const RolesSelect: React.FC<IProps> = (props) => {
       currentMemuDetail,
       permissionsMapFlat,
     );
-    // const cascadeIds = findDependsCascadeIds(key, cascadeIdsMap).map((item: string) => splitStrFn(item));
-    console.log('demoData', findDependsCascadeIds(key, cascadeIdsMap));
-
-    const cascadeIdsRes = findDependsCascadeIds(key, cascadeIdsMap).reduce(
-      (res: any, item: string) => {
-        const [menuKey, checkPermission] = splitStrFn(item);
-        res.cascadeIds = [...res.cascadeIds, checkPermission];
-        const pathMap = permissionsMapFlat[menuKey].pathMap;
-        res.menusRelative = uniq([
-          ...res.menusRelative,
-          ...splitStrFn(pathMap as string),
-        ]);
-        return res;
-      },
-      { cascadeIds: [], menusRelative: [] },
+    console.log(
+      'demoData',
+      findDependsCascadeIds(key, cascadeIdsMap),
+      cascadeIdsMap,
     );
+    // 也需要拼接自己的菜单及对应的checkPermission
+    const cascadeIdsRes = findDependsCascadeIds(key, cascadeIdsMap)
+      .concat([`${cascadeIdsMap[key].menuKey}/${key}`])
+      .reduce(
+        (res: any, item: string) => {
+          const [menuKey, checkPermission] = splitStrFn(item);
+          res.cascadeIds = [...res.cascadeIds, checkPermission];
+          const pathMap = permissionsMapFlat[menuKey].pathMap;
+          res.menusRelative = [
+            ...res.menusRelative,
+            splitStrFn(pathMap as string),
+          ];
+          return res;
+        },
+        { cascadeIds: [], menusRelative: [] },
+      );
     const { cascadeIds, menusRelative } = cascadeIdsRes;
     console.log('cascadeIds', cascadeIdsRes);
+    const relativeMenus = formatMatrix(menusRelative);
+
+    console.log('relativeMenus', relativeMenus);
 
     if (e.target.checked) {
       // 选中
       old.push(key);
       old = old.concat(cascadeIds);
+      const addMenus = relativeMenus.reduce((res, item) => [...res, ...item]);
       treeCheckedTemp = uniq([
         ...treeCheckedTemp,
         ...ancestorMenus,
         currentKey,
-        ...menusRelative,
+        ...addMenus,
       ]);
     } else {
       // 取消选中
       old.splice(old.indexOf(key), 1);
       old = difference(old, cascadeIds);
-      const relativeMenusEmpty = menusRelative.filter((m) =>
-        judgeSelectedEmpty(permissionsMapFlat[m], old, treeCheckedTemp),
-      );
-      console.log('relativeMenusEmpty', relativeMenusEmpty);
-      treeCheckedTemp = difference(treeCheckedTemp, relativeMenusEmpty);
+
       if (isCascadeMenu && judgeSelectedEmpty(record, old, treeCheckedTemp)) {
         treeCheckedTemp.splice(treeCheckedTemp.indexOf(currentKey), 1);
         const cancelAncestorCheckedMenus = ancestorMenus.filter((item) => {
@@ -192,10 +200,22 @@ const RolesSelect: React.FC<IProps> = (props) => {
           const needJudgeMenus = difference(children, [currentKey]);
           return !needJudgeMenus.some((n) => treeChecked.includes(n));
         });
+
         treeCheckedTemp = difference(
           treeCheckedTemp,
           cancelAncestorCheckedMenus,
         );
+      }
+      let i = relativeMenus.length - 1;
+      while (i >= 0) {
+        let item = relativeMenus[i];
+        // eslint-disable-next-line @typescript-eslint/no-loop-func
+        const cancelMenus = item.filter((k) =>
+          judgeSelectedEmpty(permissionsMapFlat[k], old, treeCheckedTemp),
+        );
+        console.log('cancelMenus', cancelMenus);
+        treeCheckedTemp = difference(treeCheckedTemp, cancelMenus);
+        i--;
       }
     }
 

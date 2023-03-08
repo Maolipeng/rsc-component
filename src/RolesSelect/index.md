@@ -22,7 +22,7 @@ const PERMISSION_LIST = [
             cascadeKeys: [
               'authorizeData/authorizeDataAuth',
               'projectList/projectEdit',
-              'ownData/ownDataAuth',
+              // 'ownData/ownDataAuth',
             ],
           },
           {
@@ -252,9 +252,9 @@ const PERMISSION_LIST = [
 ];
 export default () => (
   <RolesSelect
-    value={{ menu: ['dataManage', 'ownData'], checkedPermissions: [] }}
-    isSelectAll
-    isCascadeMenu
+    // value={{ menu: ['dataManage', 'ownData'], checkedPermissions: [] }}
+    // isSelectAll
+    // isCascadeMenu
     data={PERMISSION_LIST}
   />
 );

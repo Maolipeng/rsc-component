@@ -1,4 +1,9 @@
-import { PermissionItem, PermissionListType, RolesPermission } from './typing';
+import {
+  cascadeIdsMapItemType,
+  PermissionItem,
+  PermissionListType,
+  RolesPermission,
+} from './typing';
 
 export const flatMapFn = (
   list: PermissionListType,
@@ -37,17 +42,14 @@ export const deepCollectMenusCheckedPermissions = (
   list: PermissionListType,
 ) => {
   return list.reduce(
-    (
-      res: RolesPermission & { cascadeIdsMap: Record<string, string[]> },
-      item,
-    ) => {
+    (res: RolesPermission & { cascadeIdsMap: Record<string, any> }, item) => {
       let { menu, checkedPermissions, cascadeIdsMap } = res;
       const { uiPermissions, key: menuKey, children } = item;
       menu = [...menu, menuKey];
       const uiPermissionKeys = uiPermissions.map((u) => {
         const { key, cascadeKeys } = u;
         if (cascadeKeys) {
-          cascadeIdsMap[key] = cascadeKeys;
+          cascadeIdsMap[key] = { cascadeKeys, menuKey };
         }
         return key;
       });
@@ -71,10 +73,13 @@ export const deepCollectMenusCheckedPermissions = (
 export const splitStrFn = (str: string, by: string = '/'): string[] =>
   str.split(by);
 
-export const findDependsCascadeIds = (key, cascadeIdsMap) => {
-  const cascadeKeys = cascadeIdsMap[key];
-  if (cascadeKeys) {
-    const dependKeys = cascadeKeys.reduce((res, item) => {
+export const findDependsCascadeIds = (
+  key: string,
+  cascadeIdsMap: Record<string, cascadeIdsMapItemType>,
+): string[] => {
+  const cascadeKeysList: string[] | null = cascadeIdsMap[key]?.cascadeKeys;
+  if (cascadeKeysList) {
+    const dependKeys = cascadeKeysList.reduce((res: string[], item: string) => {
       const splitArr = splitStrFn(item);
       return [
         ...res,
@@ -85,4 +90,20 @@ export const findDependsCascadeIds = (key, cascadeIdsMap) => {
     return dependKeys;
   }
   return [];
+};
+
+export type Migtrix = string[][];
+export const formatMatrix = (matrix: Migtrix): Migtrix => {
+  let result: Migtrix = [];
+  matrix.forEach((item) => {
+    item.forEach((m, index) => {
+      if (!result[index]) {
+        result[index] = [];
+      }
+      if (!result[index].includes(m)) {
+        result[index].push(m);
+      }
+    });
+  });
+  return result;
 };

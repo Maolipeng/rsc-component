@@ -18,3 +18,8 @@ export type PemissionsMapType = Record<
   string,
   PermissionItem & { parent: string | null }
 >;
+
+export type cascadeIdsMapItemType = {
+  menuKey: string;
+  cascadeKeys: string[];
+};
