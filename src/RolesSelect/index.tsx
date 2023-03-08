@@ -154,21 +154,24 @@ const RolesSelect: React.FC<IProps> = (props) => {
       cascadeIdsMap,
     );
     // 也需要拼接自己的菜单及对应的checkPermission
-    const cascadeIdsRes = findDependsCascadeIds(key, cascadeIdsMap)
-      .concat([`${cascadeIdsMap[key].menuKey}/${key}`])
-      .reduce(
-        (res: any, item: string) => {
-          const [menuKey, checkPermission] = splitStrFn(item);
-          res.cascadeIds = [...res.cascadeIds, checkPermission];
-          const pathMap = permissionsMapFlat[menuKey].pathMap;
-          res.menusRelative = [
-            ...res.menusRelative,
-            splitStrFn(pathMap as string),
-          ];
-          return res;
-        },
-        { cascadeIds: [], menusRelative: [] },
-      );
+    const currentMenuKey = cascadeIdsMap[key]?.menuKey;
+    let findRelativeCasCadeIds = findDependsCascadeIds(key, cascadeIdsMap);
+    if (currentMenuKey) {
+      findRelativeCasCadeIds.push(`${currentMenuKey}/${key}`);
+    }
+    const cascadeIdsRes = findRelativeCasCadeIds.reduce(
+      (res: any, item: string) => {
+        const [menuKey, checkPermission] = splitStrFn(item);
+        res.cascadeIds = [...res.cascadeIds, checkPermission];
+        const pathMap = permissionsMapFlat[menuKey].pathMap;
+        res.menusRelative = [
+          ...res.menusRelative,
+          splitStrFn(pathMap as string),
+        ];
+        return res;
+      },
+      { cascadeIds: [], menusRelative: [] },
+    );
     const { cascadeIds, menusRelative } = cascadeIdsRes;
     console.log('cascadeIds', cascadeIdsRes);
     const relativeMenus = formatMatrix(menusRelative);
@@ -179,7 +182,10 @@ const RolesSelect: React.FC<IProps> = (props) => {
       // 选中
       old.push(key);
       old = old.concat(cascadeIds);
-      const addMenus = relativeMenus.reduce((res, item) => [...res, ...item]);
+      const addMenus = relativeMenus.reduce(
+        (res, item) => [...res, ...item],
+        [],
+      );
       treeCheckedTemp = uniq([
         ...treeCheckedTemp,
         ...ancestorMenus,
