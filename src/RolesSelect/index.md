@@ -538,6 +538,33 @@ export default () => {
 在配置菜单及功能权限时，有些功能权限依赖于其他菜单的功能权限，所以配置了 cascadeKeys 字段，内部会收集功能权限的 cascadeKeys 的集合，同时直接依赖的功能权限可能又有自己的功能权限 cascadeKeys，所以配置了一个功能字段，需要找出所有不同级别菜单的直接和间接菜单的集合（类似的多叉树的遍历），里面已经内聚
 
 配置实例
+例如以 我的数据-添加数据 功能权限配置为例
+
+```
+{
+    key: 'ownDataCreate',
+    title: '添加数据',
+    cascadeKeys: [
+      'authorizeData/authorizeDataAuth',
+      'projectList/projectEdit',
+    ],
+},
+// 同时authorizeDataAuth，projectEdit又有依赖
+ {
+    key: 'authorizeDataAuth',
+    title: '授权',
+    cascadeKeys: ['projectList/projectCreate'],
+  },
+  {
+    key: 'projectEdit',
+    title: '项目设置',
+    cascadeKeys: ['datasets/datasetsCreate'],
+  }
+
+```
+
+那么此时我的数据功能直接间接影响的是 authorizeDataAuth， projectEdit，projectCreate，datasetsCreate 功能权限，
+注：cascadeKeys 配置需要菜单/功能权限 这种形式配置，防止功能权限重名，只需要配置上本级菜单，不需要递归配置
 
 ```jsx
 import { RolesSelect } from 'rsc-component';
